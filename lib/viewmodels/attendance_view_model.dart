@@ -38,7 +38,7 @@ class AttendanceViewModel extends ChangeNotifier {
       notifyListeners();
       final pos = await _currentPosition();
       await _repo.mark(
-        attendanceStatus: status.isMarkedIn ? 'mark_out' : 'mark_in',
+        attendanceStatus: status.isMarkedIn ? 2 : 1,
         latitude: pos.latitude,
         longitude: pos.longitude,
       );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../viewmodels/leave_view_model.dart';
@@ -16,24 +17,44 @@ class ApplyLeaveScreen extends StatefulWidget {
 
 class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
   String leaveMode = 'full_day';
+  String selectedLeaveType = 'casual';
   final from = TextEditingController();
   final to = TextEditingController();
   final reason = TextEditingController();
-  final leaveType = TextEditingController();
+
+  final List<String> leaveTypes = ['casual', 'sick', 'emergency', 'annual', 'personal'];
 
   @override
   void dispose() {
     from.dispose();
     to.dispose();
     reason.dispose();
-    leaveType.dispose();
     super.dispose();
   }
 
   Future<void> _apply() async {
+    if (from.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select from date')),
+      );
+      return;
+    }
+    if (to.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select to date')),
+      );
+      return;
+    }
+    if (reason.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a reason')),
+      );
+      return;
+    }
+
     final ok = await context.read<LeaveViewModel>().applyLeave(
           leaveMode: leaveMode,
-          leaveType: leaveType.text.trim(),
+          leaveType: selectedLeaveType,
           startDate: from.text.trim(),
           endDate: to.text.trim(),
           reason: reason.text.trim(),
@@ -60,8 +81,12 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
   }
 
   String _monthFromDate(String date) {
-    if (date.length >= 7 && date[4] == '-') return date.substring(5, 7);
-    return DateTime.now().month.toString().padLeft(2, '0');
+    try {
+      final dt = DateTime.parse(date);
+      return DateFormat('MMMM').format(dt);
+    } catch (_) {
+      return DateFormat('MMMM').format(DateTime.now());
+    }
   }
 
   Future<void> _pick(TextEditingController controller) async {
@@ -72,13 +97,15 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
       initialDate: DateTime.now(),
     );
     if (date != null) {
-      controller.text = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+      controller.text =
+          '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.bg,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -89,14 +116,22 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
               Container(
                 height: 45,
                 decoration: BoxDecoration(
-                  color: AppColors.white,
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: const [BoxShadow(color: Color(0x22000000), blurRadius: 4)],
                 ),
                 child: Row(
                   children: [
-                    _ModeButton(text: 'Full Day', selected: leaveMode == 'full_day', onTap: () => setState(() => leaveMode = 'full_day')),
-                    _ModeButton(text: 'Half Day', selected: leaveMode == 'half_day', onTap: () => setState(() => leaveMode = 'half_day')),
+                    _ModeButton(
+                      text: 'Full Day',
+                      selected: leaveMode == 'full_day',
+                      onTap: () => setState(() => leaveMode = 'full_day'),
+                    ),
+                    _ModeButton(
+                      text: 'Half Day',
+                      selected: leaveMode == 'half_day',
+                      onTap: () => setState(() => leaveMode = 'half_day'),
+                    ),
                   ],
                 ),
               ),
@@ -104,26 +139,62 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppColors.white,
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: const [BoxShadow(color: Color(0x22000000), blurRadius: 5)],
                 ),
                 child: Column(
                   children: [
-                    AppTextField(controller: from, label: 'From', hint: 'YYYY-MM-DD', readOnly: true, onTap: () => _pick(from), suffixIcon: const Icon(Icons.calendar_month, size: 18)),
+                    AppTextField(
+                      controller: from,
+                      label: 'From',
+                      hint: 'YYYY-MM-DD',
+                      readOnly: true,
+                      onTap: () => _pick(from),
+                      suffixIcon: const Icon(Icons.calendar_month, size: 18),
+                    ),
                     const SizedBox(height: 12),
-                    AppTextField(controller: to, label: 'To', hint: 'YYYY-MM-DD', readOnly: true, onTap: () => _pick(to), suffixIcon: const Icon(Icons.calendar_month, size: 18)),
+                    AppTextField(
+                      controller: to,
+                      label: 'To',
+                      hint: 'YYYY-MM-DD',
+                      readOnly: true,
+                      onTap: () => _pick(to),
+                      suffixIcon: const Icon(Icons.calendar_month, size: 18),
+                    ),
                     const SizedBox(height: 12),
-                    AppTextField(controller: reason, label: 'Reason', hint: 'Enter Leave reason', maxLines: 3),
+                    AppTextField(
+                      controller: reason,
+                      label: 'Reason',
+                      hint: 'Enter Leave reason',
+                      maxLines: 3,
+                    ),
                     const SizedBox(height: 12),
-                    AppTextField(controller: leaveType, label: 'Leave Type', hint: 'casual / sick / emergency'),
+                    _LeaveTypeDropdown(
+                      value: selectedLeaveType,
+                      items: leaveTypes,
+                      onChanged: (v) => setState(() => selectedLeaveType = v!),
+                    ),
                   ],
                 ),
               ),
               const Spacer(),
-              Consumer<LeaveViewModel>(builder: (_, vm, __) => PrimaryButton(text: 'Apply', isLoading: vm.isLoading, onTap: _apply)),
+              Consumer<LeaveViewModel>(
+                builder: (_, vm, __) => PrimaryButton(
+                  text: 'Apply',
+                  isLoading: vm.isLoading,
+                  onTap: _apply,
+                ),
+              ),
               const SizedBox(height: 12),
-              PrimaryButton(text: 'Leave List', outlined: true, onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LeaveListScreen()))),
+              PrimaryButton(
+                text: 'Leave List',
+                outlined: true,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LeaveListScreen()),
+                ),
+              ),
               const SizedBox(height: 32),
             ],
           ),
@@ -134,7 +205,12 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
 }
 
 class _ModeButton extends StatelessWidget {
-  const _ModeButton({required this.text, required this.selected, required this.onTap});
+  const _ModeButton({
+    required this.text,
+    required this.selected,
+    required this.onTap,
+  });
+
   final String text;
   final bool selected;
   final VoidCallback onTap;
@@ -146,10 +222,69 @@ class _ModeButton extends StatelessWidget {
         onTap: onTap,
         child: Container(
           alignment: Alignment.center,
-          decoration: BoxDecoration(color: selected ? AppColors.primary : Colors.transparent, borderRadius: BorderRadius.circular(24)),
-          child: Text(text, style: TextStyle(fontWeight: FontWeight.w700, color: selected ? Colors.white : Colors.black)),
+          decoration: BoxDecoration(
+            color: selected ? AppColors.primary : Colors.transparent,
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Text(
+            text,
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              color: selected ? Colors.white : Colors.black,
+            ),
+          ),
         ),
       ),
+    );
+  }
+}
+
+class _LeaveTypeDropdown extends StatelessWidget {
+  const _LeaveTypeDropdown({
+    required this.value,
+    required this.items,
+    required this.onChanged,
+  });
+
+  final String value;
+  final List<String> items;
+  final ValueChanged<String?> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Leave Type',
+          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+        ),
+        const SizedBox(height: 6),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: value,
+              isExpanded: true,
+              items: items.map((e) {
+                return DropdownMenuItem(
+                  value: e,
+                  child: Text(
+                    e[0].toUpperCase() + e.substring(1),
+                    style: const TextStyle(color: Colors.black87),
+                  ),
+                );
+              }).toList(),
+              onChanged: onChanged,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

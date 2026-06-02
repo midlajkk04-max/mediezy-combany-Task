@@ -3,34 +3,119 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../core/constants/app_colors.dart';
 import '../../data/models/route_model.dart';
 
-class RouteMapScreen extends StatelessWidget {
+class RouteMapScreen extends StatefulWidget {
   const RouteMapScreen({super.key, required this.route});
   final RouteModel route;
 
   @override
-  Widget build(BuildContext context) {
-    final hasLocation = route.latitude != 0 && route.longitude != 0;
-    final position = LatLng(hasLocation ? route.latitude : 10.0261, hasLocation ? route.longitude : 76.3125);
+  State<RouteMapScreen> createState() => _RouteMapScreenState();
+}
 
+class _RouteMapScreenState extends State<RouteMapScreen> {
+  GoogleMapController? _mapController;
+  bool _mapError = false; // ignore: prefer_final_fields
+
+  bool get _hasValidLocation {
+    return widget.route.latitude != 0 && widget.route.longitude != 0;
+  }
+
+  @override
+  void dispose() {
+    _mapController?.dispose();
+    super.dispose();
+  }
+
+  Set<Marker> _buildMarkers() {
+    final markers = <Marker>{};
+    if (!_hasValidLocation) return markers;
+
+    markers.add(
+      Marker(
+        markerId: const MarkerId('mark_in'),
+        position: LatLng(widget.route.latitude, widget.route.longitude),
+        infoWindow: InfoWindow(
+          title: 'Mark In',
+          snippet: widget.route.markIn,
+        ),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+      ),
+    );
+
+    if (widget.route.markOutLatitude != 0 && widget.route.markOutLongitude != 0) {
+      markers.add(
+        Marker(
+          markerId: const MarkerId('mark_out'),
+          position: LatLng(widget.route.markOutLatitude, widget.route.markOutLongitude),
+          infoWindow: InfoWindow(
+            title: 'Mark Out',
+            snippet: widget.route.markOut,
+          ),
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+        ),
+      );
+    }
+
+    return markers;
+  }
+
+  Set<Polyline> _buildPolylines() {
+    if (!_hasValidLocation) return {};
+    if (widget.route.markOutLatitude == 0 && widget.route.markOutLongitude == 0) {
+      return {};
+    }
+
+    return {
+      Polyline(
+        polylineId: const PolylineId('route_line'),
+        points: [
+          LatLng(widget.route.latitude, widget.route.longitude),
+          LatLng(widget.route.markOutLatitude, widget.route.markOutLongitude),
+        ],
+        color: AppColors.primary,
+        width: 3,
+      ),
+    };
+  }
+
+  CameraPosition _initialCamera() {
+    if (_hasValidLocation) {
+      return CameraPosition(
+        target: LatLng(widget.route.latitude, widget.route.longitude),
+        zoom: 14,
+      );
+    }
+    return const CameraPosition(
+      target: LatLng(10.0261, 76.3125),
+      zoom: 10,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
         children: [
-          GoogleMap(
-            initialCameraPosition: CameraPosition(target: position, zoom: 14),
-            markers: {
-              Marker(markerId: const MarkerId('route'), position: position, infoWindow: InfoWindow(title: route.name)),
-            },
-          ),
+          _buildMap(),
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(24),
               child: Row(
                 children: [
-                  InkWell(onTap: () => Navigator.pop(context), child: const Icon(Icons.arrow_back_ios_new)),
+                  InkWell(
+                    onTap: () => Navigator.pop(context),
+                    child: const Icon(Icons.arrow_back_ios_new),
+                  ),
                   const SizedBox(width: 10),
-                  const Text('My Route', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+                  const Text(
+                    'My Route',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                  ),
                   const Spacer(),
-                  const CircleAvatar(radius: 16, backgroundColor: AppColors.darkPrimary, child: Icon(Icons.person, color: Colors.white, size: 20)),
+                  const CircleAvatar(
+                    radius: 16,
+                    backgroundColor: AppColors.darkPrimary,
+                    child: Icon(Icons.person, color: Colors.white, size: 20),
+                  ),
                 ],
               ),
             ),
@@ -41,7 +126,13 @@ class RouteMapScreen extends StatelessWidget {
             bottom: 36,
             child: Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(color: AppColors.white, borderRadius: BorderRadius.circular(8), boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 6)]),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: const [
+                  BoxShadow(color: Color(0x33000000), blurRadius: 6)
+                ],
+              ),
               child: Row(
                 children: [
                   Expanded(
@@ -49,20 +140,135 @@ class RouteMapScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(route.name, style: const TextStyle(fontWeight: FontWeight.w800)),
-                        const Text('Online/Offline', style: TextStyle(fontSize: 11)),
-                        const Row(children: [Icon(Icons.battery_full, color: AppColors.primary, size: 14), Text('100%', style: TextStyle(fontWeight: FontWeight.w700))]),
+                        Text(
+                          'Route - ${widget.route.date}',
+                          style: const TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(Icons.login, size: 12, color: AppColors.approved),
+                            const SizedBox(width: 4),
+                            Text(
+                              widget.route.markIn,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: AppColors.approved,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Icon(Icons.logout, size: 12, color: AppColors.danger),
+                            const SizedBox(width: 4),
+                            Text(
+                              widget.route.markOut,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: AppColors.danger,
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (_hasValidLocation)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              '${widget.route.latitude.toStringAsFixed(4)}, ${widget.route.longitude.toStringAsFixed(4)}',
+                              style: const TextStyle(
+                                fontSize: 10,
+                                color: AppColors.textGrey,
+                              ),
+                            ),
+                          ),
                       ],
                     ),
                   ),
-                  const Text('253.0 Km', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
-                  const SizedBox(width: 12),
-                  const CircleAvatar(backgroundColor: AppColors.darkPrimary, child: Icon(Icons.refresh, color: Colors.white)),
+                  InkWell(
+                    onTap: () => _mapController?.animateCamera(
+                      CameraUpdate.newLatLng(
+                        LatLng(widget.route.latitude, widget.route.longitude),
+                      ),
+                    ),
+                    child: const CircleAvatar(
+                      backgroundColor: AppColors.darkPrimary,
+                      child: Icon(Icons.my_location, color: Colors.white),
+                    ),
+                  ),
                 ],
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildMap() {
+    if (_mapError || !_hasValidLocation) {
+      return _buildFallbackMap();
+    }
+
+    try {
+      return GoogleMap(
+        initialCameraPosition: _initialCamera(),
+        markers: _buildMarkers(),
+        polylines: _buildPolylines(),
+        myLocationEnabled: false,
+        myLocationButtonEnabled: false,
+        zoomControlsEnabled: false,
+        mapType: MapType.normal,
+        onMapCreated: (controller) {
+          _mapController = controller;
+        },
+      );
+    } catch (_) {
+      return _buildFallbackMap();
+    }
+  }
+
+  Widget _buildFallbackMap() {
+    return Container(
+      color: const Color(0xFFE8F5E9),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.map, size: 64, color: AppColors.primary),
+            const SizedBox(height: 16),
+            const Text(
+              'Route Map',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: AppColors.primary,
+              ),
+            ),
+            if (_hasValidLocation) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Mark In: ${widget.route.latitude.toStringAsFixed(4)}, ${widget.route.longitude.toStringAsFixed(4)}',
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: AppColors.textGrey),
+              ),
+              if (widget.route.markOutLatitude != 0 &&
+                  widget.route.markOutLongitude != 0)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                    'Mark Out: ${widget.route.markOutLatitude.toStringAsFixed(4)}, ${widget.route.markOutLongitude.toStringAsFixed(4)}',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: AppColors.textGrey),
+                  ),
+                ),
+            ] else
+              const Padding(
+                padding: EdgeInsets.only(top: 8),
+                child: Text(
+                  'Location coordinates not available',
+                  style: TextStyle(color: AppColors.textGrey),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

@@ -3,7 +3,10 @@ import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../data/models/route_model.dart';
 import '../../viewmodels/route_view_model.dart';
-import '../widgets/top_bar.dart';
+import '../../widgets/custom_app_bar.dart';
+import '../../widgets/custom_text_field.dart';
+import '../../widgets/empty_state.dart';
+import '../../widgets/profile_avatar.dart';
 import 'route_map_screen.dart';
 
 class RouteListScreen extends StatefulWidget {
@@ -14,41 +17,94 @@ class RouteListScreen extends StatefulWidget {
 }
 
 class _RouteListScreenState extends State<RouteListScreen> {
+  final searchController = TextEditingController();
+  List<RouteModel> filteredRoutes = [];
+  bool _initialized = false;
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => context.read<RouteViewModel>().loadRoutes());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<RouteViewModel>().loadRoutes().then((_) {
+        if (!mounted) return;
+        final routes = context.read<RouteViewModel>().routes;
+        setState(() {
+          filteredRoutes = List.from(routes);
+          _initialized = true;
+        });
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
+  }
+
+  void _filterRoutes(String query, List<RouteModel> allRoutes) {
+    if (query.isEmpty) {
+      filteredRoutes = List.from(allRoutes);
+    } else {
+      filteredRoutes = allRoutes.where((route) {
+        return route.name.toLowerCase().contains(query.toLowerCase()) ||
+            route.date.toLowerCase().contains(query.toLowerCase());
+      }).toList();
+    }
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.bg,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
             children: [
-              const TopBar(title: 'My Route'),
+              const CustomAppBar(title: 'My Route'),
               const SizedBox(height: 20),
-              Container(
-                height: 36,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(border: Border.all(color: AppColors.darkPrimary), borderRadius: BorderRadius.circular(18)),
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [Expanded(child: Text('Search', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12))), Icon(Icons.close, size: 18), SizedBox(width: 10)],
-                ),
+              CustomTextField(
+                controller: searchController,
+                hint: 'Search by date or name',
+                prefixIcon: const Icon(Icons.search, size: 20),
+                onChanged: (query) {
+                  final vm = context.read<RouteViewModel>();
+                  _filterRoutes(query, vm.routes);
+                },
+                suffixIcon: searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.close, size: 18),
+                        onPressed: () {
+                          searchController.clear();
+                          final vm = context.read<RouteViewModel>();
+                          _filterRoutes('', vm.routes);
+                        },
+                      )
+                    : null,
               ),
               const SizedBox(height: 14),
               Expanded(
                 child: Consumer<RouteViewModel>(
                   builder: (_, vm, __) {
-                    if (vm.isLoading) return const Center(child: CircularProgressIndicator());
-                    if (vm.error != null) return Center(child: Text(vm.error!));
-                    if (vm.routes.isEmpty) return const Center(child: Text('No routes found'));
+                    if (vm.isLoading && !_initialized) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (vm.error != null && vm.routes.isEmpty) {
+                      return Center(child: Text(vm.error!));
+                    }
+                    if (vm.routes.isEmpty && _initialized) {
+                      return const EmptyState(message: 'No routes found');
+                    }
+                    if (filteredRoutes.isEmpty &&
+                        searchController.text.isNotEmpty) {
+                      return const EmptyState(message: 'No matching routes');
+                    }
                     return ListView.builder(
-                      itemCount: vm.routes.length,
-                      itemBuilder: (_, i) => _RouteCard(route: vm.routes[i]),
+                      itemCount: filteredRoutes.length,
+                      itemBuilder: (_, i) =>
+                          _RouteCard(route: filteredRoutes[i]),
                     );
                   },
                 ),
@@ -68,24 +124,38 @@ class _RouteCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => RouteMapScreen(route: route))),
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => RouteMapScreen(route: route)),
+      ),
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(color: AppColors.white, borderRadius: BorderRadius.circular(8), boxShadow: const [BoxShadow(color: Color(0x22000000), blurRadius: 4)]),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          boxShadow: const [BoxShadow(color: Color(0x22000000), blurRadius: 4)],
+        ),
         child: Row(
           children: [
-            const CircleAvatar(radius: 16, backgroundColor: AppColors.darkPrimary, child: Icon(Icons.person, color: Colors.white, size: 20)),
+            const ProfileAvatar(radius: 16, iconSize: 20),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(route.date.isEmpty ? 'Route' : route.date, style: const TextStyle(fontWeight: FontWeight.w800)),
-                  Text('Marked in at ${route.markIn}  |  Marked out at ${route.markOut}', style: const TextStyle(fontSize: 10, color: AppColors.grey)),
+                  Text(
+                    route.date.isEmpty ? 'Route' : route.date,
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                  Text(
+                    'Marked in at ${route.markIn}  |  Marked out at ${route.markOut}',
+                    style: const TextStyle(fontSize: 10, color: AppColors.grey),
+                  ),
                 ],
               ),
             ),
+            const Icon(Icons.chevron_right, color: AppColors.grey),
           ],
         ),
       ),

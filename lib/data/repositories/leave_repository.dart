@@ -22,9 +22,7 @@ class LeaveRepository {
       'start_date': startDate,
       'end_date': endDate,
       'reason': reason,
-      'user_id': userId,
-      // Extra field is harmless in most Laravel APIs and helps if backend expects employee id too.
-      'employee_id': employeeId.isNotEmpty ? employeeId : userId,
+      'user_id': int.tryParse(userId) ?? 0,
     };
 
     // ignore: avoid_print
@@ -42,9 +40,7 @@ class LeaveRepository {
     required String month,
   }) async {
     final body = {
-      'employee_id': employeeId.isNotEmpty ? employeeId : userId,
-      // Extra fallback. Backend docs say employee_id, but this helps if API uses user_id internally.
-      'user_id': userId,
+      'employee_id': int.tryParse(employeeId.isNotEmpty ? employeeId : userId) ?? 0,
       'leave_type': leaveType,
       'month': month,
     };

@@ -26,6 +26,31 @@ class LeaveModel {
       return defaultValue;
     }
 
+    String parseStatus(dynamic rawStatus) {
+      if (rawStatus is int) {
+        switch (rawStatus) {
+          case 0:
+            return 'pending';
+          case 1:
+            return 'approved';
+          case 2:
+            return 'rejected';
+          default:
+            return 'pending';
+        }
+      }
+      if (rawStatus is String) {
+        final s = rawStatus.toLowerCase().trim();
+        if (s == '0' || s == 'pending') return 'pending';
+        if (s == '1' || s == 'approved') return 'approved';
+        if (s == '2' || s == 'rejected') return 'rejected';
+        return s;
+      }
+      return 'pending';
+    }
+
+    final rawStatus = json['status'] ?? json['leave_status'] ?? json['approval_status'] ?? 0;
+
     return LeaveModel(
       id: value(['id', 'leave_id', 'request_id']),
       leaveMode: value(['leave_mode', 'mode', 'day_type'], 'Full Day'),
@@ -33,7 +58,7 @@ class LeaveModel {
       startDate: value(['start_date', 'from_date', 'from', 'date']),
       endDate: value(['end_date', 'to_date', 'to']),
       reason: value(['reason', 'description', 'leave_reason']),
-      status: value(['status', 'leave_status', 'approval_status', 'request_status'], 'pending'),
+      status: parseStatus(rawStatus),
     );
   }
 
@@ -58,20 +83,19 @@ class LeaveModel {
   static List<dynamic> _findLeaveList(dynamic value) {
     if (value is List) {
       if (value.isEmpty) return value;
-      // Correct list is normally a list of objects/maps.
       if (value.first is Map) return value;
     }
 
     if (value is Map) {
       final map = Map<String, dynamic>.from(value);
 
-      // Common Laravel/API keys.
       final directKeys = [
         'data',
         'leaves',
         'leave',
         'leave_list',
         'leaveList',
+        'sales_executive_leaves',
         'records',
         'result',
         'items',
@@ -82,7 +106,6 @@ class LeaveModel {
         if (found.isNotEmpty) return found;
       }
 
-      // Some APIs return { data: { data: [...] } } or nested pagination.
       for (final entry in map.entries) {
         final found = _findLeaveList(entry.value);
         if (found.isNotEmpty) return found;
