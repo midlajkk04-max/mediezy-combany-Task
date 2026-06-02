@@ -8,7 +8,9 @@ class ApiResult {
   factory ApiResult.fromDynamic(dynamic data) {
     if (data is Map<String, dynamic>) {
       return ApiResult(
-        success: data['status'] == true || data['success'] == true || data['message'] != null,
+        success: data['status'] == true ||
+            data['success'] == true ||
+            data['message'] != null,
         message: (data['message'] ?? data['msg'] ?? 'Success').toString(),
         raw: data,
       );

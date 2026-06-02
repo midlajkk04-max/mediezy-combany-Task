@@ -25,10 +25,10 @@ class LeaveRepository {
       'user_id': int.tryParse(userId) ?? 0,
     };
 
-    // ignore: avoid_print
+    
     print('APPLY LEAVE REQUEST: $body');
     final data = await _apiClient.post(ApiEndpoints.applyLeave, body);
-    // ignore: avoid_print
+    
     print('APPLY LEAVE RESPONSE: $data');
     return ApiResult.fromDynamic(data);
   }
@@ -45,10 +45,10 @@ class LeaveRepository {
       'month': month,
     };
 
-    // ignore: avoid_print
+    
     print('LEAVE LIST REQUEST: $body');
     final data = await _apiClient.post(ApiEndpoints.leaves, body);
-    // ignore: avoid_print
+    
     print('LEAVE LIST RESPONSE: $data');
     return LeaveModel.listFromDynamic(data);
   }

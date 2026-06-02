@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/utils/responsive.dart';
 import '../../viewmodels/attendance_view_model.dart';
 import '../../viewmodels/auth_view_model.dart';
 import '../../viewmodels/dashboard_view_model.dart';
@@ -34,13 +35,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final s = Responsive.scale(context);
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
+          padding: EdgeInsets.symmetric(horizontal: Responsive.w(24, context)),
           child: ListView(
             children: [
-              const SizedBox(height: 26),
+              SizedBox(height: 26 * s),
               Stack(
                 alignment: Alignment.topRight,
                 children: [
@@ -48,45 +50,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     child: Column(
                       children: [
                         const ProfileAvatar(radius: 34, iconSize: 48),
-                        const SizedBox(height: 12),
+                        SizedBox(height: 12 * s),
                         Consumer<DashboardViewModel>(
-                          builder: (_, vm, __) => Text(
-                            'Hi ${vm.name}',
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
+                          builder: (_, vm, __) => Text('Hi ${vm.name}',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                  fontSize: 20, fontWeight: FontWeight.w800)),
                         ),
                         Consumer<DashboardViewModel>(
-                          builder: (_, vm, __) => Text(
-                            vm.role,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(fontSize: 11),
-                          ),
+                          builder: (_, vm, __) => Text(vm.role,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(fontSize: 11)),
                         ),
                         Consumer<DashboardViewModel>(
                           builder: (_, vm, __) => vm.location.isNotEmpty
                               ? Padding(
-                                  padding: const EdgeInsets.only(top: 2),
+                                  padding: EdgeInsets.only(top: 2 * s),
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(
-                                        Icons.location_on_outlined,
-                                        size: 12,
-                                        color: AppColors.grey,
-                                      ),
-                                      const SizedBox(width: 2),
-                                      Text(
-                                        vm.location,
-                                        textAlign: TextAlign.center,
-                                        style: const TextStyle(
-                                          fontSize: 10,
-                                          color: AppColors.textGrey,
-                                        ),
-                                      ),
+                                      const Icon(Icons.location_on_outlined,
+                                          size: 12, color: AppColors.grey),
+                                      SizedBox(width: 2 * s),
+                                      Text(vm.location,
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(
+                                              fontSize: 10,
+                                              color: AppColors.textGrey)),
                                     ],
                                   ),
                                 )
@@ -103,18 +93,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         await vm.logout();
                         if (!context.mounted) return;
                         Navigator.pushAndRemoveUntil(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const LoginScreen(),
-                          ),
-                          (_) => false,
-                        );
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => const LoginScreen()),
+                            (_) => false);
                       },
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: 24 * s),
               Consumer<AttendanceViewModel>(
                 builder: (_, vm, __) => AttendanceActionBanner(
                   status: vm.status,
@@ -122,20 +110,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   onTap: () async {
                     final ok = await vm.markAttendance();
                     if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          ok ? 'Attendance updated' : (vm.error ?? 'Failed'),
-                        ),
-                      ),
-                    );
-                    if (ok) {
-                      context.read<RouteViewModel>().loadRoutes();
-                    }
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text(ok
+                            ? 'Attendance updated'
+                            : (vm.error ?? 'Failed'))));
+                    if (ok) context.read<RouteViewModel>().loadRoutes();
                   },
                 ),
               ),
-              const SizedBox(height: 28),
+              SizedBox(height: 28 * s),
               Row(
                 children: [
                   Expanded(
@@ -144,78 +127,62 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       icon: Icons.route,
                       dark: true,
                       onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const RouteListScreen(),
-                        ),
-                      ),
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const RouteListScreen())),
                     ),
                   ),
-                  const SizedBox(width: 18),
+                  SizedBox(width: 18 * s),
                   Expanded(
                     child: DashboardActionCard(
                       title: 'Apply Leave',
                       icon: Icons.calendar_month,
                       onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const ApplyLeaveScreen(),
-                        ),
-                      ),
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const ApplyLeaveScreen())),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 28),
+              SizedBox(height: 28 * s),
               Row(
                 children: [
                   const Expanded(
-                    child: Text(
-                      'Recent Activity',
-                      style: TextStyle(fontWeight: FontWeight.w800),
-                    ),
-                  ),
+                      child: Text('Recent Activity',
+                          style: TextStyle(fontWeight: FontWeight.w800))),
                   InkWell(
                     onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const LeaveListScreen(),
-                      ),
-                    ),
-                    child: const Text(
-                      'View All  ›',
-                      style: TextStyle(fontWeight: FontWeight.w700),
-                    ),
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const LeaveListScreen())),
+                    child: const Text('View All  ›',
+                        style: TextStyle(fontWeight: FontWeight.w700)),
                   ),
                 ],
               ),
-              const SizedBox(height: 10),
+              SizedBox(height: 10 * s),
               Consumer<RouteViewModel>(
                 builder: (_, vm, __) {
                   if (vm.isLoading) {
                     return const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(16),
-                        child: CircularProgressIndicator(),
-                      ),
-                    );
+                        child: Padding(
+                            padding: EdgeInsets.all(16),
+                            child: CircularProgressIndicator()));
                   }
                   if (vm.routes.isEmpty) {
                     return const ActivityCard(
-                      date: 'No recent activity',
-                      subtitle: 'Your attendance records will appear here',
-                    );
+                        date: 'No recent activity',
+                        subtitle: 'Your attendance records will appear here');
                   }
                   return Column(
-                    children: vm.routes.take(3).map(
-                      (route) {
-                        return ActivityCard(
-                          date: route.date.isNotEmpty ? route.date : 'Route',
-                          markIn: route.markIn,
-                          markOut: route.markOut,
-                        );
-                      },
-                    ).toList(),
+                    children: vm.routes.take(3).map((route) {
+                      return ActivityCard(
+                        date: route.date.isNotEmpty ? route.date : 'Route',
+                        markIn: route.markIn,
+                        markOut: route.markOut,
+                      );
+                    }).toList(),
                   );
                 },
               ),

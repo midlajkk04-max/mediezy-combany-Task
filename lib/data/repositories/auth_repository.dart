@@ -22,16 +22,12 @@ class AuthRepository {
     final token = _extractToken(data);
     final user = UserModel.fromLoginResponse(data);
 
-    // Debug console-il ithu nokki token empty aano enn confirm cheyyam.
-    // Token empty aanengil protected APIs "Unauthenticated" kaanikkum.
-    // ignore: avoid_print
+   
     print('LOGIN RAW RESPONSE: $data');
-    // ignore: avoid_print
     print('SAVED TOKEN EMPTY?: ${token.isEmpty}');
-    // ignore: avoid_print
     print('SAVED USER ID: ${user.id}');
-    // ignore: avoid_print
-    print('SAVED EMPLOYEE ID: ${user.employeeId.isNotEmpty ? user.employeeId : user.id}');
+    print(
+        'SAVED EMPLOYEE ID: ${user.employeeId.isNotEmpty ? user.employeeId : user.id}');
 
     await _sessionManager.saveLogin(
       token: token,
@@ -57,8 +53,7 @@ class AuthRepository {
     final token = _findTokenDeep(response);
     if (token.isEmpty) return '';
 
-    // Some APIs return "Bearer xxxxx". We store only xxxxx because
-    // ApiClient adds "Bearer" automatically.
+   
     if (token.toLowerCase().startsWith('bearer ')) {
       return token.substring(7).trim();
     }
@@ -91,7 +86,7 @@ class AuthRepository {
         }
       }
 
-      // Laravel responses sometimes use: authorisation: { token: ... }
+     
       for (final entry in map.entries) {
         final found = _findTokenDeep(entry.value);
         if (found.trim().isNotEmpty) return found;

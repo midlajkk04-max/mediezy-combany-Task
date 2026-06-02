@@ -33,7 +33,8 @@ class DashboardActionCard extends StatelessWidget {
             CircleAvatar(
               radius: 16,
               backgroundColor: dark ? Colors.white : AppColors.darkPrimary,
-              child: Icon(icon, color: dark ? AppColors.darkPrimary : Colors.white, size: 18),
+              child: Icon(icon,
+                  color: dark ? AppColors.darkPrimary : Colors.white, size: 18),
             ),
             const Spacer(),
             Text(
