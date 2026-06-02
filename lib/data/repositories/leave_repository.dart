@@ -1,0 +1,59 @@
+import '../../core/network/api_client.dart';
+import '../../core/network/api_endpoints.dart';
+import '../models/api_result.dart';
+import '../models/leave_model.dart';
+
+class LeaveRepository {
+  LeaveRepository(this._apiClient);
+  final ApiClient _apiClient;
+
+  Future<ApiResult> applyLeave({
+    required String leaveMode,
+    required String leaveType,
+    required String startDate,
+    required String endDate,
+    required String reason,
+    required String userId,
+    required String employeeId,
+  }) async {
+    final body = {
+      'leave_mode': leaveMode,
+      'leave_type': leaveType,
+      'start_date': startDate,
+      'end_date': endDate,
+      'reason': reason,
+      'user_id': userId,
+      // Extra field is harmless in most Laravel APIs and helps if backend expects employee id too.
+      'employee_id': employeeId.isNotEmpty ? employeeId : userId,
+    };
+
+    // ignore: avoid_print
+    print('APPLY LEAVE REQUEST: $body');
+    final data = await _apiClient.post(ApiEndpoints.applyLeave, body);
+    // ignore: avoid_print
+    print('APPLY LEAVE RESPONSE: $data');
+    return ApiResult.fromDynamic(data);
+  }
+
+  Future<List<LeaveModel>> leaves({
+    required String employeeId,
+    required String userId,
+    required String leaveType,
+    required String month,
+  }) async {
+    final body = {
+      'employee_id': employeeId.isNotEmpty ? employeeId : userId,
+      // Extra fallback. Backend docs say employee_id, but this helps if API uses user_id internally.
+      'user_id': userId,
+      'leave_type': leaveType,
+      'month': month,
+    };
+
+    // ignore: avoid_print
+    print('LEAVE LIST REQUEST: $body');
+    final data = await _apiClient.post(ApiEndpoints.leaves, body);
+    // ignore: avoid_print
+    print('LEAVE LIST RESPONSE: $data');
+    return LeaveModel.listFromDynamic(data);
+  }
+}
