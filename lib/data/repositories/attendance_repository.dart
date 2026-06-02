@@ -13,7 +13,7 @@ class AttendanceRepository {
   }
 
   Future<ApiResult> mark({
-    required String attendanceStatus,
+    required int attendanceStatus,
     required double latitude,
     required double longitude,
   }) async {

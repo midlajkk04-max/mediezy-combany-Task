@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../core/constants/app_colors.dart';
 import '../../viewmodels/attendance_view_model.dart';
 import '../../viewmodels/dashboard_view_model.dart';
-import '../attendance/attendance_history_card.dart';
+import '../../viewmodels/route_view_model.dart';
+import '../../widgets/activity_card.dart';
+import '../../widgets/dashboard_action_card.dart';
+import '../../widgets/profile_avatar.dart';
 import 'attendance_action_banner.dart';
 import '../leave/apply_leave_screen.dart';
 import '../leave/leave_list_screen.dart';
-import '../route/create_route_screen.dart';
+import '../route/route_list_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -23,6 +25,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<DashboardViewModel>().loadUser();
       context.read<AttendanceViewModel>().loadStatus();
+      context.read<RouteViewModel>().loadRoutes();
     });
   }
 
@@ -35,12 +38,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: ListView(
             children: [
               const SizedBox(height: 26),
-              const CircleAvatar(radius: 34, backgroundColor: AppColors.darkPrimary, child: Icon(Icons.person, color: Colors.white, size: 48)),
+              const ProfileAvatar(radius: 34, iconSize: 48),
               const SizedBox(height: 12),
               Consumer<DashboardViewModel>(
-                builder: (_, vm, __) => Text('Hi ${vm.name}', textAlign: TextAlign.center, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
+                builder: (_, vm, __) => Text(
+                  'Hi ${vm.name}',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                ),
               ),
-              const Text('Sales Executive\nErnakulam', textAlign: TextAlign.center, style: TextStyle(fontSize: 11)),
+              Consumer<DashboardViewModel>(
+                builder: (_, vm, __) => Text(
+                  '${vm.role}${vm.location.isNotEmpty ? '\n${vm.location}' : ''}',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 11),
+                ),
+              ),
               const SizedBox(height: 24),
               Consumer<AttendanceViewModel>(
                 builder: (_, vm, __) => AttendanceActionBanner(
@@ -50,67 +63,104 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     final ok = await vm.markAttendance();
                     if (!context.mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(ok ? 'Attendance updated' : (vm.error ?? 'Failed'))),
+                      SnackBar(
+                        content: Text(
+                          ok ? 'Attendance updated' : (vm.error ?? 'Failed'),
+                        ),
+                      ),
                     );
+                    if (ok) {
+                      context.read<RouteViewModel>().loadRoutes();
+                    }
                   },
                 ),
               ),
               const SizedBox(height: 28),
               Row(
                 children: [
-                  Expanded(child: _Tile(title: 'Route', icon: Icons.calendar_month, dark: true, onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CreateRouteScreen())))),
+                  Expanded(
+                    child: DashboardActionCard(
+                      title: 'Route',
+                      icon: Icons.route,
+                      dark: true,
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const RouteListScreen(),
+                        ),
+                      ),
+                    ),
+                  ),
                   const SizedBox(width: 18),
-                  Expanded(child: _Tile(title: 'Apply Leave', icon: Icons.calendar_month, onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ApplyLeaveScreen())))),
+                  Expanded(
+                    child: DashboardActionCard(
+                      title: 'Apply Leave',
+                      icon: Icons.calendar_month,
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const ApplyLeaveScreen(),
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 28),
               Row(
                 children: [
-                  const Expanded(child: Text('Recent Activity', style: TextStyle(fontWeight: FontWeight.w800))),
+                  const Expanded(
+                    child: Text(
+                      'Recent Activity',
+                      style: TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                  ),
                   InkWell(
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LeaveListScreen())),
-                    child: const Text('View All  ›', style: TextStyle(fontWeight: FontWeight.w700)),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const LeaveListScreen(),
+                      ),
+                    ),
+                    child: const Text(
+                      'View All  ›',
+                      style: TextStyle(fontWeight: FontWeight.w700),
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 10),
-              const AttendanceHistoryCard(date: '23 Aug 2026'),
-              const AttendanceHistoryCard(date: '22 Aug 2026'),
-              const AttendanceHistoryCard(date: '21 Aug 2026'),
+              Consumer<RouteViewModel>(
+                builder: (_, vm, __) {
+                  if (vm.isLoading) {
+                    return const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(16),
+                        child: CircularProgressIndicator(),
+                      ),
+                    );
+                  }
+                  if (vm.routes.isEmpty) {
+                    return const ActivityCard(
+                      date: 'No recent activity',
+                      subtitle: 'Your attendance records will appear here',
+                    );
+                  }
+                  return Column(
+                    children: vm.routes.take(3).map(
+                      (route) {
+                        return ActivityCard(
+                          date: route.date.isNotEmpty ? route.date : 'Route',
+                          markIn: route.markIn,
+                          markOut: route.markOut,
+                        );
+                      },
+                    ).toList(),
+                  );
+                },
+              ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _Tile extends StatelessWidget {
-  const _Tile({required this.title, required this.icon, required this.onTap, this.dark = false});
-  final String title;
-  final IconData icon;
-  final VoidCallback onTap;
-  final bool dark;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        height: 105,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: dark ? AppColors.primary : AppColors.white,
-          borderRadius: BorderRadius.circular(14),
-          boxShadow: const [BoxShadow(color: Color(0x22000000), blurRadius: 5)],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            CircleAvatar(radius: 16, backgroundColor: dark ? Colors.white : AppColors.darkPrimary, child: Icon(icon, color: dark ? AppColors.darkPrimary : Colors.white, size: 18)),
-            const Spacer(),
-            Text(title, style: TextStyle(fontWeight: FontWeight.w800, color: dark ? Colors.white : Colors.black)),
-          ],
         ),
       ),
     );

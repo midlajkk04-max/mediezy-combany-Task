@@ -1,12 +1,14 @@
 class RouteModel {
   const RouteModel({
-    required this.id,
-    required this.name,
+    this.id = '',
+    this.name = 'Route',
     required this.date,
     required this.markIn,
     required this.markOut,
-    required this.latitude,
-    required this.longitude,
+    this.latitude = 0.0,
+    this.longitude = 0.0,
+    this.markOutLatitude = 0.0,
+    this.markOutLongitude = 0.0,
   });
 
   final String id;
@@ -16,23 +18,51 @@ class RouteModel {
   final String markOut;
   final double latitude;
   final double longitude;
+  final double markOutLatitude;
+  final double markOutLongitude;
 
   factory RouteModel.fromJson(Map<String, dynamic> json) {
+    String value(List<String> keys, [String defaultVal = '']) {
+      for (final key in keys) {
+        if (json.containsKey(key) && json[key] != null) {
+          return json[key].toString();
+        }
+      }
+      return defaultVal;
+    }
+
+    double parseLat(dynamic locationField, String key) {
+      if (locationField is Map) {
+        final v = locationField[key];
+        if (v != null) return double.tryParse(v.toString()) ?? 0.0;
+      }
+      return 0.0;
+    }
+
+    final markInLocation = json['mark_in_location'];
+    final markOutLocation = json['mark_out_location'];
+
     return RouteModel(
-      id: (json['id'] ?? '').toString(),
-      name: (json['name'] ?? json['employee_name'] ?? 'Route').toString(),
-      date: (json['date'] ?? json['created_at'] ?? '').toString(),
-      markIn: (json['mark_in'] ?? json['marked_in_at'] ?? '9:30').toString(),
-      markOut: (json['mark_out'] ?? json['marked_out_at'] ?? '6:30').toString(),
-      latitude: double.tryParse((json['latitude'] ?? json['lat'] ?? '0').toString()) ?? 0,
-      longitude: double.tryParse((json['longitude'] ?? json['lng'] ?? '0').toString()) ?? 0,
+      id: value(['id', 'route_id', 'attendance_id']),
+      name: value(['name', 'employee_name', 'customer_name'], 'Route'),
+      date: value(['date', 'created_at', 'attendance_date']),
+      markIn: value(['mark_in', 'marked_in_at', 'check_in', 'in_time']),
+      markOut: value(['mark_out', 'marked_out_at', 'check_out', 'out_time']),
+      latitude: parseLat(markInLocation, 'latitude'),
+      longitude: parseLat(markInLocation, 'longitude'),
+      markOutLatitude: parseLat(markOutLocation, 'latitude'),
+      markOutLongitude: parseLat(markOutLocation, 'longitude'),
     );
   }
 
   static List<RouteModel> listFromDynamic(dynamic response) {
     dynamic data = response;
     if (response is Map<String, dynamic>) {
-      data = response['data'] ?? response['routes'] ?? response['route_list'] ?? [];
+      data = response['data'] ??
+          response['routes'] ??
+          response['route_list'] ??
+          response['attendance'] ??
+          [];
     }
     if (data is List) {
       return data

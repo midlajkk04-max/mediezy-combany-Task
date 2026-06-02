@@ -12,7 +12,7 @@ class LeaveViewModel extends ChangeNotifier {
   bool isLoading = false;
   String? error;
   String selectedFilter = 'all';
-  String selectedMonth = DateFormat('MM').format(DateTime.now());
+  String selectedMonth = DateFormat('MMMM').format(DateTime.now());
   List<LeaveModel> leaves = [];
 
   Future<bool> applyLeave({
@@ -50,7 +50,7 @@ class LeaveViewModel extends ChangeNotifier {
         employeeId: employeeId,
       );
 
-      selectedMonth = _monthFromDate(startDate);
+      selectedMonth = _monthNameFromDate(startDate);
       selectedFilter = 'pending';
       await loadLeaves('pending', month: selectedMonth);
       return true;
@@ -92,9 +92,12 @@ class LeaveViewModel extends ChangeNotifier {
     }
   }
 
-  String _monthFromDate(String date) {
-    // Expected format: yyyy-MM-dd
-    if (date.length >= 7 && date[4] == '-') return date.substring(5, 7);
-    return DateFormat('MM').format(DateTime.now());
+  String _monthNameFromDate(String date) {
+    try {
+      final dt = DateTime.parse(date);
+      return DateFormat('MMMM').format(dt);
+    } catch (_) {
+      return DateFormat('MMMM').format(DateTime.now());
+    }
   }
 }

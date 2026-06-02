@@ -26,10 +26,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   void dispose() {
-    for (final c in [firstName, lastName, email, address, dob, mobile, location, doj, password]) {
+    for (final c in [
+      firstName,
+      lastName,
+      email,
+      address,
+      dob,
+      mobile,
+      location,
+      doj,
+      password,
+    ]) {
       c.dispose();
     }
     super.dispose();
+  }
+
+  Future<void> _pickDate(TextEditingController controller) async {
+    final date = await showDatePicker(
+      context: context,
+      firstDate: DateTime(1960),
+      lastDate: DateTime(2050),
+      initialDate: DateTime.now(),
+    );
+    if (date != null) {
+      controller.text =
+          '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    }
   }
 
   Future<void> _save() async {
@@ -47,16 +70,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final ok = await context.read<AuthViewModel>().register(body);
     if (!mounted) return;
     if (ok) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Account created')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Account created successfully')),
+      );
       Navigator.pop(context);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.read<AuthViewModel>().error ?? 'Register failed')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.read<AuthViewModel>().error ?? 'Registration failed'),
+        ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.bg,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(22),
@@ -68,35 +98,89 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: AppColors.white,
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(10),
-                    boxShadow: const [BoxShadow(color: Color(0x22000000), blurRadius: 5)],
+                    boxShadow: const [
+                      BoxShadow(color: Color(0x22000000), blurRadius: 5),
+                    ],
                   ),
                   child: ListView(
                     children: [
-                      AppTextField(controller: firstName, label: 'First Name', hint: 'Enter First Name'),
+                      AppTextField(
+                        controller: firstName,
+                        label: 'First Name',
+                        hint: 'Enter First Name',
+                      ),
                       const SizedBox(height: 10),
-                      AppTextField(controller: lastName, label: 'Last Name', hint: 'Enter Last Name'),
+                      AppTextField(
+                        controller: lastName,
+                        label: 'Last Name',
+                        hint: 'Enter Last Name',
+                      ),
                       const SizedBox(height: 10),
-                      AppTextField(controller: email, label: 'Email', hint: 'Enter Email'),
+                      AppTextField(
+                        controller: email,
+                        label: 'Email',
+                        hint: 'Enter Email',
+                      ),
                       const SizedBox(height: 10),
-                      AppTextField(controller: address, label: 'Address', hint: 'Enter Address', maxLines: 3),
+                      AppTextField(
+                        controller: address,
+                        label: 'Address',
+                        hint: 'Enter Address',
+                        maxLines: 3,
+                      ),
                       const SizedBox(height: 10),
-                      AppTextField(controller: dob, label: 'DOB', hint: 'YYYY-MM-DD'),
+                      AppTextField(
+                        controller: dob,
+                        label: 'DOB',
+                        hint: 'YYYY-MM-DD',
+                        readOnly: true,
+                        onTap: () => _pickDate(dob),
+                        suffixIcon: const Icon(Icons.calendar_month, size: 18),
+                      ),
                       const SizedBox(height: 10),
-                      AppTextField(controller: mobile, label: 'Mobile Number', hint: 'Enter Number'),
+                      AppTextField(
+                        controller: mobile,
+                        label: 'Mobile Number',
+                        hint: 'Enter Number',
+                        keyboardType: TextInputType.phone,
+                      ),
                       const SizedBox(height: 10),
-                      AppTextField(controller: location, label: 'Location', hint: 'Enter location'),
+                      AppTextField(
+                        controller: location,
+                        label: 'Location',
+                        hint: 'Enter location',
+                      ),
                       const SizedBox(height: 10),
-                      AppTextField(controller: doj, label: 'DOJ', hint: 'Date Of Joining YYYY-MM-DD'),
+                      AppTextField(
+                        controller: doj,
+                        label: 'DOJ',
+                        hint: 'Date Of Joining',
+                        readOnly: true,
+                        onTap: () => _pickDate(doj),
+                        suffixIcon: const Icon(Icons.calendar_month, size: 18),
+                      ),
                       const SizedBox(height: 10),
-                      AppTextField(controller: password, label: 'Password', hint: 'Enter Password', obscureText: true),
+                      AppTextField(
+                        controller: password,
+                        label: 'Password',
+                        hint: 'Enter Password',
+                        obscureText: true,
+                      ),
                     ],
                   ),
                 ),
               ),
               const SizedBox(height: 18),
-              Consumer<AuthViewModel>(builder: (_, vm, __) => PrimaryButton(text: 'Save', isLoading: vm.isLoading, onTap: _save)),
+              Consumer<AuthViewModel>(
+                builder: (_, vm, __) => PrimaryButton(
+                  text: 'Save',
+                  isLoading: vm.isLoading,
+                  onTap: _save,
+                ),
+              ),
+              const SizedBox(height: 24),
             ],
           ),
         ),

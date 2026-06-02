@@ -1,5 +1,5 @@
-name: mediezy_hr_provider_mvvm
-description: Mediezy/Zyromate HR task using MVVM + Provider + API integration.
+name: zyromate_hr_task
+description: Zyromate HR task using MVVM + Provider + API integration.
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -15,6 +15,7 @@ dependencies:
   geolocator: ^13.0.1
   google_maps_flutter: ^2.9.0
   intl: ^0.19.0
+  permission_handler: ^11.3.1
   cupertino_icons: ^1.0.8
 
 dev_dependencies:
