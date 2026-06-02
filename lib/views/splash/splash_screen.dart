@@ -22,16 +22,13 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> _checkLoginState() async {
     await Future.delayed(const Duration(seconds: 2));
     if (!mounted) return;
-
     final isLoggedIn = await context.read<LocalStorageService>().isLoggedIn;
     if (!mounted) return;
-
     Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (_) => isLoggedIn ? const DashboardScreen() : const LoginScreen(),
-      ),
-    );
+        context,
+        MaterialPageRoute(
+            builder: (_) =>
+                isLoggedIn ? const DashboardScreen() : const LoginScreen()));
   }
 
   @override
@@ -42,32 +39,23 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-              'zyromate',
-              style: TextStyle(
-                fontSize: 42,
-                color: AppColors.darkPrimary,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
+            const Text('zyromate',
+                style: TextStyle(
+                    fontSize: 42,
+                    color: AppColors.darkPrimary,
+                    fontWeight: FontWeight.w900)),
             const SizedBox(height: 16),
-            const Text(
-              'HR Management',
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.textGrey,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
+            const Text('HR Management',
+                style: TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textGrey,
+                    fontWeight: FontWeight.w500)),
             const SizedBox(height: 32),
             const SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: AppColors.primary,
-              ),
-            ),
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                    strokeWidth: 2, color: AppColors.primary)),
           ],
         ),
       ),

@@ -39,7 +39,9 @@ class ActivityCard extends StatelessWidget {
               children: [
                 Text(date, style: const TextStyle(fontWeight: FontWeight.w800)),
                 if (subtitle != null)
-                  Text(subtitle!, style: const TextStyle(fontSize: 10, color: AppColors.grey))
+                  Text(subtitle!,
+                      style:
+                          const TextStyle(fontSize: 10, color: AppColors.grey))
                 else
                   Text(
                     'Marked in at ${markIn ?? '9:30'}  |  Marked out at ${markOut ?? '6:30'}',

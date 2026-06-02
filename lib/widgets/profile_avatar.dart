@@ -24,7 +24,8 @@ class ProfileAvatar extends StatelessWidget {
           ? NetworkImage(imageUrl!)
           : null,
       child: (imageUrl == null || imageUrl!.isEmpty)
-          ? Icon(Icons.person, color: Colors.white, size: iconSize ?? radius * 1.4)
+          ? Icon(Icons.person,
+              color: Colors.white, size: iconSize ?? radius * 1.4)
           : null,
     );
   }

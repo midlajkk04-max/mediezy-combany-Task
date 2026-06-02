@@ -29,13 +29,20 @@ class UserModel {
 
     final first = (map['first_name'] ?? '').toString();
     final last = (map['last_name'] ?? '').toString();
-    final fullName = (map['name'] ?? map['full_name'] ?? '$first $last').toString().trim();
+    final fullName =
+        (map['name'] ?? map['full_name'] ?? '$first $last').toString().trim();
 
     return UserModel(
       id: (map['id'] ?? map['user_id'] ?? map['staff_id'] ?? '').toString(),
-      employeeId: (map['employee_id'] ?? map['emp_id'] ?? map['id'] ?? map['user_id'] ?? '').toString(),
+      employeeId: (map['employee_id'] ??
+              map['emp_id'] ??
+              map['id'] ??
+              map['user_id'] ??
+              '')
+          .toString(),
       name: fullName.isEmpty ? 'User' : fullName,
-      mobile: (map['mobile_number'] ?? map['mobile'] ?? map['phone'] ?? '').toString(),
+      mobile: (map['mobile_number'] ?? map['mobile'] ?? map['phone'] ?? '')
+          .toString(),
     );
   }
 }

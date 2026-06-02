@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/utils/responsive.dart';
 import '../../viewmodels/auth_view_model.dart';
-import '../widgets/app_text_field.dart';
-import '../widgets/primary_button.dart';
-import '../widgets/top_bar.dart';
+import '../../widgets/custom_app_bar.dart';
+import '../../widgets/custom_text_field.dart';
+import '../../widgets/date_picker_field.dart';
+import '../../widgets/primary_button.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -35,24 +37,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
       mobile,
       location,
       doj,
-      password,
+      password
     ]) {
       c.dispose();
     }
     super.dispose();
-  }
-
-  Future<void> _pickDate(TextEditingController controller) async {
-    final date = await showDatePicker(
-      context: context,
-      firstDate: DateTime(1960),
-      lastDate: DateTime(2050),
-      initialDate: DateTime.now(),
-    );
-    if (date != null) {
-      controller.text =
-          '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-    }
   }
 
   Future<void> _save() async {
@@ -77,110 +66,97 @@ class _RegisterScreenState extends State<RegisterScreen> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(context.read<AuthViewModel>().error ?? 'Registration failed'),
-        ),
+            content: Text(
+                context.read<AuthViewModel>().error ?? 'Registration failed')),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final s = Responsive.scale(context);
+    final gap = SizedBox(height: 10 * s);
     return Scaffold(
       backgroundColor: AppColors.bg,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(22),
+          padding: EdgeInsets.all(Responsive.w(22, context)),
           child: Column(
             children: [
-              const TopBar(title: 'Create Account'),
-              const SizedBox(height: 14),
+              const CustomAppBar(title: 'Create Account'),
+              SizedBox(height: 14 * s),
               Expanded(
                 child: Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: EdgeInsets.all(16 * s),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(10),
                     boxShadow: const [
-                      BoxShadow(color: Color(0x22000000), blurRadius: 5),
+                      BoxShadow(color: Color(0x22000000), blurRadius: 5)
                     ],
                   ),
                   child: ListView(
                     children: [
-                      AppTextField(
-                        controller: firstName,
-                        label: 'First Name',
-                        hint: 'Enter First Name',
-                      ),
-                      const SizedBox(height: 10),
-                      AppTextField(
-                        controller: lastName,
-                        label: 'Last Name',
-                        hint: 'Enter Last Name',
-                      ),
-                      const SizedBox(height: 10),
-                      AppTextField(
-                        controller: email,
-                        label: 'Email',
-                        hint: 'Enter Email',
-                      ),
-                      const SizedBox(height: 10),
-                      AppTextField(
-                        controller: address,
-                        label: 'Address',
-                        hint: 'Enter Address',
-                        maxLines: 3,
-                      ),
-                      const SizedBox(height: 10),
-                      AppTextField(
-                        controller: dob,
-                        label: 'DOB',
-                        hint: 'YYYY-MM-DD',
-                        readOnly: true,
-                        onTap: () => _pickDate(dob),
-                        suffixIcon: const Icon(Icons.calendar_month, size: 18),
-                      ),
-                      const SizedBox(height: 10),
-                      AppTextField(
-                        controller: mobile,
-                        label: 'Mobile Number',
-                        hint: 'Enter Number',
-                        keyboardType: TextInputType.phone,
-                      ),
-                      const SizedBox(height: 10),
-                      AppTextField(
-                        controller: location,
-                        label: 'Location',
-                        hint: 'Enter location',
-                      ),
-                      const SizedBox(height: 10),
-                      AppTextField(
-                        controller: doj,
-                        label: 'DOJ',
-                        hint: 'Date Of Joining',
-                        readOnly: true,
-                        onTap: () => _pickDate(doj),
-                        suffixIcon: const Icon(Icons.calendar_month, size: 18),
-                      ),
-                      const SizedBox(height: 10),
-                      AppTextField(
-                        controller: password,
-                        label: 'Password',
-                        hint: 'Enter Password',
-                        obscureText: true,
-                      ),
+                      CustomTextField(
+                          controller: firstName,
+                          label: 'First Name',
+                          hint: 'Enter First Name'),
+                      gap,
+                      CustomTextField(
+                          controller: lastName,
+                          label: 'Last Name',
+                          hint: 'Enter Last Name'),
+                      gap,
+                      CustomTextField(
+                          controller: email,
+                          label: 'Email',
+                          hint: 'Enter Email'),
+                      gap,
+                      CustomTextField(
+                          controller: address,
+                          label: 'Address',
+                          hint: 'Enter Address',
+                          maxLines: 3),
+                      gap,
+                      DatePickerField(
+                          controller: dob,
+                          label: 'DOB',
+                          onPick: (c) =>
+                              pickDate(context: context, controller: c)),
+                      gap,
+                      CustomTextField(
+                          controller: mobile,
+                          label: 'Mobile Number',
+                          hint: 'Enter Number',
+                          keyboardType: TextInputType.phone),
+                      gap,
+                      CustomTextField(
+                          controller: location,
+                          label: 'Location',
+                          hint: 'Enter location'),
+                      gap,
+                      DatePickerField(
+                          controller: doj,
+                          label: 'DOJ',
+                          hint: 'Date Of Joining',
+                          onPick: (c) =>
+                              pickDate(context: context, controller: c)),
+                      gap,
+                      CustomTextField(
+                          controller: password,
+                          label: 'Password',
+                          hint: 'Enter Password',
+                          obscureText: true),
                     ],
                   ),
                 ),
               ),
-              const SizedBox(height: 18),
+              SizedBox(height: 18 * s),
               Consumer<AuthViewModel>(
                 builder: (_, vm, __) => PrimaryButton(
-                  text: 'Save',
-                  isLoading: vm.isLoading,
-                  onTap: _save,
-                ),
+                    text: 'Save', isLoading: vm.isLoading, onTap: _save),
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: 24 * s),
             ],
           ),
         ),

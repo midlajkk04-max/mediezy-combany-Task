@@ -49,7 +49,8 @@ class LeaveModel {
       return 'pending';
     }
 
-    final rawStatus = json['status'] ?? json['leave_status'] ?? json['approval_status'] ?? 0;
+    final rawStatus =
+        json['status'] ?? json['leave_status'] ?? json['approval_status'] ?? 0;
 
     return LeaveModel(
       id: value(['id', 'leave_id', 'request_id']),

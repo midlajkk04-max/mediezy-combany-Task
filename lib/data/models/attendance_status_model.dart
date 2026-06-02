@@ -19,7 +19,6 @@ class AttendanceStatusModel {
       attendanceData = response['data'] ?? response['attendance'];
     }
 
-    // If no valid attendance data, default to "not marked"
     if (attendanceData is! Map<String, dynamic>) {
       return const AttendanceStatusModel(
         isMarkedIn: false,
@@ -61,7 +60,6 @@ class AttendanceStatusModel {
       'ended_at',
     ]);
 
-    // Exact matching — prevents false positives
     const exactMarkedIn = {'marked_in', 'checked_in', 'in', 'started', '1'};
     const exactMarkedOut = {
       'marked_out',
