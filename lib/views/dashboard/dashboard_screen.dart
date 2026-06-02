@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../core/constants/app_colors.dart';
 import '../../viewmodels/attendance_view_model.dart';
+import '../../viewmodels/auth_view_model.dart';
 import '../../viewmodels/dashboard_view_model.dart';
 import '../../viewmodels/route_view_model.dart';
 import '../../widgets/activity_card.dart';
 import '../../widgets/dashboard_action_card.dart';
 import '../../widgets/profile_avatar.dart';
 import 'attendance_action_banner.dart';
+import '../auth/login_screen.dart';
 import '../leave/apply_leave_screen.dart';
 import '../leave/leave_list_screen.dart';
 import '../route/route_list_screen.dart';
@@ -38,21 +41,78 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: ListView(
             children: [
               const SizedBox(height: 26),
-              const ProfileAvatar(radius: 34, iconSize: 48),
-              const SizedBox(height: 12),
-              Consumer<DashboardViewModel>(
-                builder: (_, vm, __) => Text(
-                  'Hi ${vm.name}',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
-                ),
-              ),
-              Consumer<DashboardViewModel>(
-                builder: (_, vm, __) => Text(
-                  '${vm.role}${vm.location.isNotEmpty ? '\n${vm.location}' : ''}',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 11),
-                ),
+              Stack(
+                alignment: Alignment.topRight,
+                children: [
+                  Center(
+                    child: Column(
+                      children: [
+                        const ProfileAvatar(radius: 34, iconSize: 48),
+                        const SizedBox(height: 12),
+                        Consumer<DashboardViewModel>(
+                          builder: (_, vm, __) => Text(
+                            'Hi ${vm.name}',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                        Consumer<DashboardViewModel>(
+                          builder: (_, vm, __) => Text(
+                            vm.role,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(fontSize: 11),
+                          ),
+                        ),
+                        Consumer<DashboardViewModel>(
+                          builder: (_, vm, __) => vm.location.isNotEmpty
+                              ? Padding(
+                                  padding: const EdgeInsets.only(top: 2),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.location_on_outlined,
+                                        size: 12,
+                                        color: AppColors.grey,
+                                      ),
+                                      const SizedBox(width: 2),
+                                      Text(
+                                        vm.location,
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                          fontSize: 10,
+                                          color: AppColors.textGrey,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              : const SizedBox.shrink(),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Consumer<AuthViewModel>(
+                    builder: (_, vm, __) => IconButton(
+                      icon: const Icon(Icons.logout, size: 20),
+                      color: AppColors.grey,
+                      onPressed: () async {
+                        await vm.logout();
+                        if (!context.mounted) return;
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const LoginScreen(),
+                          ),
+                          (_) => false,
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 24),
               Consumer<AttendanceViewModel>(

@@ -14,47 +14,67 @@ class AttendanceStatusModel {
   final String markedOutAt;
 
   factory AttendanceStatusModel.fromDynamic(dynamic response) {
-    dynamic data = response;
+    dynamic attendanceData;
     if (response is Map<String, dynamic>) {
-      data = response['data'] ?? response['attendance'] ?? response['result'] ?? response;
+      attendanceData = response['data'] ?? response['attendance'];
     }
 
-    String status = '';
-    String markedAt = '';
-    String markedOutAt = '';
-
-    if (data is Map<String, dynamic>) {
-      status = (data['attendance_status'] ??
-              data['status'] ??
-              data['attendanceStatus'] ??
-              '')
-          .toString()
-          .toLowerCase();
-
-      markedAt = (data['marked_at'] ??
-              data['mark_in_time'] ??
-              data['check_in'] ??
-              data['checked_in_at'] ??
-              data['in_time'] ??
-              data['time'] ??
-              '')
-          .toString();
-
-      markedOutAt = (data['mark_out_time'] ??
-              data['check_out'] ??
-              data['checked_out_at'] ??
-              data['out_time'] ??
-              data['ended_at'] ??
-              '')
-          .toString();
+    // If no valid attendance data, default to "not marked"
+    if (attendanceData is! Map<String, dynamic>) {
+      return const AttendanceStatusModel(
+        isMarkedIn: false,
+        isCompleted: false,
+        statusText: 'not_marked',
+        markedAt: '',
+        markedOutAt: '',
+      );
     }
 
-    final isOut = status.contains('out') ||
-        status.contains('completed') ||
-        status.contains('complete') ||
-        status.contains('ended');
+    String extract(List<String> keys, [String defaultVal = '']) {
+      for (final key in keys) {
+        final v = attendanceData[key];
+        if (v != null && v.toString().trim().isNotEmpty) return v.toString();
+      }
+      return defaultVal;
+    }
 
-    final isIn = (status.contains('in') || status.contains('started')) && !isOut;
+    final status = extract([
+      'attendance_status',
+      'status',
+      'attendanceStatus',
+    ]).toLowerCase();
+
+    final markedAt = extract([
+      'marked_at',
+      'mark_in_time',
+      'check_in',
+      'checked_in_at',
+      'in_time',
+      'time',
+    ]);
+
+    final markedOutAt = extract([
+      'mark_out_time',
+      'check_out',
+      'checked_out_at',
+      'out_time',
+      'ended_at',
+    ]);
+
+    // Exact matching — prevents false positives
+    const exactMarkedIn = {'marked_in', 'checked_in', 'in', 'started', '1'};
+    const exactMarkedOut = {
+      'marked_out',
+      'checked_out',
+      'out',
+      'completed',
+      'complete',
+      'ended',
+      '2',
+    };
+
+    final isOut = exactMarkedOut.contains(status);
+    final isIn = exactMarkedIn.contains(status) && !isOut;
 
     return AttendanceStatusModel(
       isMarkedIn: isIn,
