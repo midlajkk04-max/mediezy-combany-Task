@@ -13,21 +13,37 @@ class StatusChip extends StatelessWidget {
 
   Color get color {
     final s = status.toLowerCase();
-    if (s.contains('approved') || s.contains('completed'))
+
+    if (s.contains('approved') || s.contains('completed')) {
       return AppColors.approved;
-    if (s.contains('reject') || s.contains('cancel') || s.contains('denied'))
+    }
+
+    if (s.contains('reject') || s.contains('cancel') || s.contains('denied')) {
       return AppColors.danger;
-    if (s.contains('pending') || s.contains('review')) return AppColors.warning;
+    }
+
+    if (s.contains('pending') || s.contains('review')) {
+      return AppColors.warning;
+    }
+
     return AppColors.grey;
   }
 
   IconData get icon {
     final s = status.toLowerCase();
-    if (s.contains('approved') || s.contains('completed'))
+
+    if (s.contains('approved') || s.contains('completed')) {
       return Icons.check_circle;
-    if (s.contains('reject') || s.contains('cancel') || s.contains('denied'))
+    }
+
+    if (s.contains('reject') || s.contains('cancel') || s.contains('denied')) {
       return Icons.cancel;
-    if (s.contains('pending') || s.contains('review')) return Icons.schedule;
+    }
+
+    if (s.contains('pending') || s.contains('review')) {
+      return Icons.schedule;
+    }
+
     return Icons.help_outline;
   }
 
@@ -36,7 +52,11 @@ class StatusChip extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, color: color, size: size),
+        Icon(
+          icon,
+          color: color,
+          size: size,
+        ),
         const SizedBox(width: 4),
         Text(
           status,

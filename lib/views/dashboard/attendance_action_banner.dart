@@ -98,13 +98,22 @@ class AttendanceActionBanner extends StatelessWidget {
   }
 
   static String _time(String value, {required String fallback}) {
-    if (value.trim().isEmpty) return fallback;
-    final text = value.trim();
-    if (text.length >= 16 && text.contains(' '))
-      return text.split(' ').last.substring(0, 5);
-    if (text.length >= 5) return text.substring(0, 5);
-    return text;
+  if (value.trim().isEmpty) {
+    return fallback;
   }
+
+  final text = value.trim();
+
+  if (text.length >= 16 && text.contains(' ')) {
+    return text.split(' ').last.substring(0, 5);
+  }
+
+  if (text.length >= 5) {
+    return text.substring(0, 5);
+  }
+
+  return text;
+}
 }
 
 class _AttendanceBannerState {
