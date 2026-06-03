@@ -65,11 +65,20 @@ class ApiClient {
   }
 
   String _errorMessage(DioException e) {
-    final data = e.response?.data;
-    if (data is Map && data['message'] != null)
-      return data['message'].toString();
-    if (data is Map && data['error'] != null) return data['error'].toString();
-    if (data is String && data.trim().isNotEmpty) return data;
-    return e.message ?? 'Something went wrong';
+  final data = e.response?.data;
+
+  if (data is Map && data['message'] != null) {
+    return data['message'].toString();
   }
+
+  if (data is Map && data['error'] != null) {
+    return data['error'].toString();
+  }
+
+  if (data is String && data.trim().isNotEmpty) {
+    return data;
+  }
+
+  return e.message ?? 'Something went wrong';
+}
 }

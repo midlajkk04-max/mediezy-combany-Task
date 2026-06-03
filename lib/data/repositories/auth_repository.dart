@@ -23,12 +23,7 @@ class AuthRepository {
     final user = UserModel.fromLoginResponse(data);
 
    
-    print('LOGIN RAW RESPONSE: $data');
-    print('SAVED TOKEN EMPTY?: ${token.isEmpty}');
-    print('SAVED USER ID: ${user.id}');
-    print(
-        'SAVED EMPLOYEE ID: ${user.employeeId.isNotEmpty ? user.employeeId : user.id}');
-
+   
     await _sessionManager.saveLogin(
       token: token,
       userId: user.id,

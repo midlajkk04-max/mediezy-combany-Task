@@ -105,8 +105,9 @@ class _LeaveListScreenState extends State<LeaveListScreen> {
                                     style: const TextStyle(fontSize: 12)));
                           }).toList(),
                           onChanged: (v) {
-                            if (v != null)
+                            if (v != null) {
                               vm.loadLeaves(vm.selectedFilter, month: v);
+                            }
                           },
                         ),
                       ),
@@ -117,15 +118,24 @@ class _LeaveListScreenState extends State<LeaveListScreen> {
               SizedBox(height: 12 * s),
               Expanded(
                 child: Consumer<LeaveViewModel>(
+                  
                   builder: (_, vm, __) {
-                    if (vm.isLoading)
+                    if (vm.isLoading) {
                       return const Center(child: CircularProgressIndicator());
-                    if (vm.error != null) return Center(child: Text(vm.error!));
-                    if (vm.leaves.isEmpty)
+                    }
+
+                    if (vm.error != null) {
+                      return Center(child: Text(vm.error!));
+                    }
+
+                    if (vm.leaves.isEmpty) {
                       return const Center(child: Text('No leaves found'));
+                    }
+
                     return ListView.builder(
-                        itemCount: vm.leaves.length,
-                        itemBuilder: (_, i) => _LeaveCard(leave: vm.leaves[i]));
+                      itemCount: vm.leaves.length,
+                      itemBuilder: (_, i) => _LeaveCard(leave: vm.leaves[i]),
+                    );
                   },
                 ),
               ),

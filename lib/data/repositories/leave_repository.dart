@@ -25,11 +25,8 @@ class LeaveRepository {
       'user_id': int.tryParse(userId) ?? 0,
     };
 
-    
-    print('APPLY LEAVE REQUEST: $body');
     final data = await _apiClient.post(ApiEndpoints.applyLeave, body);
-    
-    print('APPLY LEAVE RESPONSE: $data');
+
     return ApiResult.fromDynamic(data);
   }
 
@@ -40,16 +37,14 @@ class LeaveRepository {
     required String month,
   }) async {
     final body = {
-      'employee_id': int.tryParse(employeeId.isNotEmpty ? employeeId : userId) ?? 0,
+      'employee_id':
+          int.tryParse(employeeId.isNotEmpty ? employeeId : userId) ?? 0,
       'leave_type': leaveType,
       'month': month,
     };
 
-    
-    print('LEAVE LIST REQUEST: $body');
     final data = await _apiClient.post(ApiEndpoints.leaves, body);
-    
-    print('LEAVE LIST RESPONSE: $data');
+
     return LeaveModel.listFromDynamic(data);
   }
 }
